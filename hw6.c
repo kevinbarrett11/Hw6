@@ -26,29 +26,33 @@ void passenger_request(int passenger, int from_floor, int to_floor,
                        void (*enter)(int, int),
                        void(*exit)(int, int))
 {
+    
+    if(current_floor != from_floor && occupancy==0) {
+        current_floor == from_floor;
+    }
+    
     // wait for the elevator to arrive at our origin floor, then get in
 pthread_barrier_wait(&barr);
-    pthread_mutex_lock(&lock);
-
+    
+    
         if(current_floor == from_floor && state == ELEVATOR_OPEN && occupancy==0) {
             enter(passenger, 0);  //change this to look for next elevator
             occupancy++;
+            pthread_barrier_wait(&barr);
+
         }
 
-        pthread_mutex_unlock(&lock);
 
 
     // wait for the elevator at our destination floor, then get out
 pthread_barrier_wait(&barr);
-    pthread_mutex_lock(&lock);
 
         if(current_floor == to_floor && state == ELEVATOR_OPEN) {
             exit(passenger, 0);
             occupancy--;
+            pthread_barrier_wait(&barr);
         }
 
-        pthread_mutex_unlock(&lock);
-    
 }
 
 void elevator_ready(int elevator, int at_floor,
@@ -65,6 +69,7 @@ void elevator_ready(int elevator, int at_floor,
         pthread_barrier_wait(&barr);
     }
     else if(state == ELEVATOR_OPEN) {
+        pthread_barrier_wait(&barr);
         door_close(elevator);
         state=ELEVATOR_CLOSED;
     }
@@ -78,19 +83,19 @@ void elevator_ready(int elevator, int at_floor,
     pthread_mutex_unlock(&lock);
 }
 
-static struct Passenger {
-    int id;
-    int from_floor;
-    int to_floor;
-    int in_elevator;
-    enum {WAITING, ENTERED, EXITED} state;
-} passengers[PASSENGERS];
-
-static struct Elevator {
-    int seqno, last_action_seqno; // these two are used to enforce control rules
-    int floor;
-    int open;
-    int passengers;
-    int trips;
-    int passengerNum;
-} elevators[ELEVATORS];
+//static struct Passenger {
+//    int id;
+//    int from_floor;
+//    int to_floor;
+//    int in_elevator;
+//    enum {WAITING, ENTERED, EXITED} state;
+//} passengers[PASSENGERS];
+//
+//static struct Elevator {
+//    int seqno, last_action_seqno; // these two are used to enforce control rules
+//    int floor;
+//    int open;
+//    int passengers;
+//    int trips;
+//    int passengerNum;
+//} elevators[ELEVATORS];
