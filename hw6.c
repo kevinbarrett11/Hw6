@@ -7,6 +7,16 @@
 pthread_mutex_t lock;
 pthread_barrier_t barr;
 
+
+static struct Passenger {
+    int id;
+    int from_floor;
+    int to_floor;
+    int in_elevator;
+    enum {WAITING, ENTERED, EXITED} state;
+} passengers[PASSENGERS];
+
+
 int current_floor;
 int direction;
 int occupancy;
@@ -26,15 +36,18 @@ void passenger_request(int passenger, int from_floor, int to_floor,
                        void (*enter)(int, int),
                        void(*exit)(int, int))
 {
-    
-    if(current_floor != from_floor && occupancy==0) {
-        current_floor == from_floor;
-    }
-    
+        struct Passenger p;
+    passengers[0] = p;
+
+    p.from_floor = from_floor;
+    p.to_floor = to_floor;
+    p.id = passenger;
+
+
     // wait for the elevator to arrive at our origin floor, then get in
 pthread_barrier_wait(&barr);
-    
-    
+
+
         if(current_floor == from_floor && state == ELEVATOR_OPEN && occupancy==0) {
             enter(passenger, 0);  //change this to look for next elevator
             occupancy++;
@@ -60,7 +73,11 @@ void elevator_ready(int elevator, int at_floor,
                     void(*door_open)(int), void(*door_close)(int)) {
     if(elevator!=0) return;
 
-
+    current_floor = at_floor;
+    
+    if(current_floor != passengers[0].from_floor && occupancy==0) {
+        current_floor = passengers[0].from_floor;
+    }
 
     pthread_mutex_lock(&lock);
     if(state == ELEVATOR_ARRIVED) {
@@ -83,14 +100,8 @@ void elevator_ready(int elevator, int at_floor,
     pthread_mutex_unlock(&lock);
 }
 
-//static struct Passenger {
-//    int id;
-//    int from_floor;
-//    int to_floor;
-//    int in_elevator;
-//    enum {WAITING, ENTERED, EXITED} state;
-//} passengers[PASSENGERS];
-//
+
+
 //static struct Elevator {
 //    int seqno, last_action_seqno; // these two are used to enforce control rules
 //    int floor;
